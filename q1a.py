@@ -7,26 +7,30 @@ from matplotlib.pyplot import figure
 def f(X,Y):
     return np.cos((X + 6*(0.35*Y))) + 2*(0.35*X*Y)
 
+#10 values from -1 to 1
 trX = np.linspace(-1,1,10)
 trY = np.linspace(-1,1,10)
-trainX, trainY = np.meshgrid(trX, trY)
-trZ = f(trainX,trainY)
-trainZ = trZ.ravel()
-trainZ = np.vstack(trainZ)
 
+trainX, trainY = np.meshgrid(trX, trY)  #10 x 10 matrix for contour plot
+trZ = f(trainX,trainY)  #z values for contour plot
+
+trainZ = trZ.ravel()
+trainZ = np.vstack(trainZ)  #100 z values in one column
+
+#produces 100 rows of x,y pairs (2 columns)
 x = trainX.ravel()
 y = trainY.ravel()
 x = np.vstack(x)
 y = np.vstack(y)
 trXY = np.concatenate((x,y),axis=1)
 
+#same process as above, but for test values
 teX = np.linspace(-1,1,9)
 teY = np.linspace(-1,1,9)
 testX, testY = np.meshgrid(teX, teY)
 teZ = f(testX,testY)
 testZ = teZ.ravel()
 testZ = np.vstack(testZ)
-
 x = testX.ravel()
 y = testY.ravel()
 x = np.vstack(x)
@@ -60,8 +64,9 @@ for n in h_neurons:
     
     py_x = model(X, w_h1, w_o)
     
-    cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=py_x, labels=Y)) # compute costs
-    #cost = tf.norm((py_x-Y), ord=1) ### other possible error function
+    #cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=py_x, labels=Y)) # compute costs
+    #cost = tf.reduce_mean(tf.norm((py_x-Y), ord=1)) ### other possible error function
+    cost = tf.nn.tanh(tf.losses.mean_squared_error(labels = Y, predictions=py_x))
     train_op = tf.train.GradientDescentOptimizer(0.1).minimize(cost) # construct an optimizer
     
     saver = tf.train.Saver()
@@ -70,9 +75,9 @@ for n in h_neurons:
     with tf.Session() as sess:
         # you need to initialize all variables
         tf.global_variables_initializer().run()
-        print(range(0,len(trXY),batch))
+        #print(range(0,len(trXY),batch))
         #for i in range(200):
-        error = 10
+        error = 100
         i = 0
         while (error > 0.297906):
             for start, end in zip(range(0, len(trXY), batch), range(batch, len(trXY)+1, batch)):
@@ -85,6 +90,7 @@ for n in h_neurons:
         saver.save(sess,"mlp/session.ckpt")
         preds.append(predicted)
         epochs = np.append(epochs,i)
+        sess.close()
 
 plt.figure()
 figure(num=None, figsize=(6, 6), dpi=80, facecolor='w', edgecolor='k')
